@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html ng-app="StickyNotesApp" ng-controller="ToDoList">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sticky Notes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.17/angular.min.js"></script>
+    <style>
+        /* Styling for the date input format */
+        input[type=date]{
+            height: 30px;
+            width: 130px;
+            background-color: cyan;
+        }
+        /* Styling for the button "Create" */
+        input[type=button]{
+            height: 30px;
+            width: 70px;
+            background-color: mintcream;
+        }
+        /* Styling for New Node */
+        .node{
+            border: 2px solid black;
+            float:left;
+            min-width: 200px;
+            width:auto;
+            min-height: 200px;
+            height:auto;
+            background-color: springgreen;
+            margin-block-end: 10px;
+            margin-left: 10px;
+            margin-top: 10px;
+        }
+        /* Styling for the New Tasks Added */
+        input[name='tasks']{
+            left:10px;
+            height: 17px;
+            width: 110px;
+            background-color:  mintcream;
+        }
+        /* Styling for Editing the Task Added */
+        input[name='edit']{
+            border: none;
+            left:10px;
+            min-height: 17px;
+            min-width: 70px;
+            width: auto;
+            background-color: springgreen;
+        }
+        /* Styling for the Checkbox */
+        input[type=checkbox]{
+            height: 20px;
+            width: 20px;
+        }
+        /* Styling for the striking off the tasks that are completed */
+        input[type=checkbox]:checked + input[id='edit']{
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <center>
+        <h2>My TO-DO List</h2>
+            <div>
+                <!-- Division for the calender -->
+                <b><i>Select the Date:  </i></b>
+                <input type="date" name="calendar" id="calendar" data-ng-model="todayDate">
+            </div>
+            <br>
+            <div>
+                <!-- Division for today's date(by default) and the selected date -->
+                <b><i>Create Note for: </i></b>{{todayDate | date: 'dd-MM-yyyy'}}
+                <br><br>
+                <!-- Adding a sticky note -->
+                <input type="button" name="create" id="create" value="Create" ng-click="newNote((todayDate | date: 'dd/MM/yyyy'))">
+            </div>
+    </center>
+    <br><br>
+    <div>
+        <div id="node" class="node" ng-repeat="note in notes track by $index">
+            <!-- Displaying Sticky Notes -->
+            <center>{{note.dateInfo}}
+            <br>
+            <!-- Entering Tasks -->
+            <input type="text" name="tasksText"
+            ng-init="note.taskin=''" 
+            id="tasksText" placeholder="Enter the Task" ng-keypress="($event.charCode==13)? addTask(note.taskin,$index) : return " ng-model="note.taskin">
+            </center>
+            <!-- Displaying Tasks & Editing the Entered Tasks -->
+            <div id="tasks" class="tasks" ng-repeat="task in note.tasks">
+                <input type="checkbox" value="">
+                <input type="text" id="edit" name="edit" value="{{task}}">
+            </div>
+        </div>
+    </div>
+    <script>
+        var i=1, j;
+        var app = angular.module("StickyNotesApp", [] );
+	    app.controller("ToDoList", ["$scope", function($scope) {
+            var date = new Date();
+            $scope.todayDate = date.getFullYear()+'-0'+(date.getMonth()+1)+'-'+date.getDate();
+            $scope.notes = [];
+            $scope.tasks = [];
+            $scope.allDates = [];
+            //Checking Whether Data is Present in the Local Storage or Not
+            if(localStorage.length!=0)
+            {
+                for(var k=0;k<localStorage.length;k++)
+                {
+                    $scope.notes.push(JSON.parse( localStorage[k]));
+                }
+                console.log("If local storage is not null"+$scope.notes);
+            }
+            //Creating a New Sticky Note
+            $scope.newNote = function(date) {
+                console.log($scope.allDates[0] + "all dates array");
+                var sample = "Note for " + date;
+                //Checking if the Note is Already Created or Not
+                for(j=0;j<$scope.allDates.length;j++)
+                {
+                    if(sample==$scope.allDates[j])
+                    {
+                        console.log("already created a note");
+                        return;
+                    }
+                }
+                //Deleting After 30 Notes
+                if ($scope.allDates.length==30) {
+                   delete ($scope.tasks);
+                }
+                //Taking a taskObj Object which has dateInfo(A String) and tasks(Array of Tasks), which is furthur pushed into notes array
+                var taskObj={};
+                taskObj.dateInfo = "Note " + "for" +" " + date;
+                taskObj.tasks=[];
+                $scope.notes.push(taskObj);
+                $scope.allDates.push(taskObj.dateInfo);
+                i++;
+            }
+            $scope.addTask = function(task,index){
+                var currentNote = $scope.notes[index];//Creating a separate tasks for each index of notes array
+                console.log(currentNote);
+            if (currentNote) {
+                currentNote.tasks = currentNote.tasks || [];
+                console.log(currentNote.tasks);
+            }
+                currentNote.tasks.push(task);
+                currentNote.taskin=undefined;
+                // For Pushing Data in to Local Storage
+                console.log(currentNote + "note which is being pushed")
+                localStorage.setItem(index,JSON.stringify(currentNote));
+                console.log(localStorage[index] + "contents stored");
+                for(var k=0;k<localStorage.length;k++)
+                {
+                    console.log(localStorage[k]);
+                }
+            }
+        }])
+
+    </script>
+</body>
+</html>
